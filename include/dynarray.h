@@ -7,7 +7,9 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <limits.h>
+
 #include "./type.h"
+#include "./slice.h"
 
 /**
  * A dynamic, exponentially growing array. Each array has an associate type, for
@@ -26,21 +28,19 @@
  * The following example demonstrates some basic usage of a dynamic array
  * 
  * ```c
- * {
- *      struct dynarray arr = dynarray_new();
- *      int values[10] = { 1, 2, 4, 4, 5, 6, 7, 8, 9, 10 };
- *      dynarray_extend(&arr, &values[0], &values[10]);
- *      for (int *it = dynarray_begin(&arr); it != dynarray_end(&arr); ++it) {
- *              printf("%d ", *it);
- *      }
- *      puts("");
- *      for (size_t _ = 0; _ < 10; ++_) {
- *              int n = *(int *)dynarray_pop(&arr, TYPEINFO(int));
- *              printf("%d ", n);
- *      }
- *      puts("");
- *      dynarray_free(&arr);
+ * struct dynarray arr = dynarray_new();
+ * int values[10] = { 1, 2, 4, 4, 5, 6, 7, 8, 9, 10 };
+ * dynarray_extend(&arr, &values[0], &values[10]);
+ * for (int *it = dynarray_begin(&arr); it != dynarray_end(&arr); ++it) {
+ *         printf("%d ", *it);
  * }
+ * puts("");
+ * for (size_t _ = 0; _ < 10; ++_) {
+ *         int n = *(int *)dynarray_pop(&arr, TYPEINFO(int));
+ *         printf("%d ", n);
+ * }
+ * puts("");
+ * dynarray_free(&arr);
  * ```
  * 
  * This outputs
@@ -116,8 +116,7 @@ void *dynarray_next_unchecked(struct dynarray *self, struct type val_type);
  * requirement that `self` must have enough remaining capacity to handle
  * extension. Use `dynarray_extend()` for an automatically growing version.
  */
-void dynarray_extend_unchecked(struct dynarray *self, uint8_t *buf,
-                               size_t buf_size);
+void dynarray_extend_unchecked(struct dynarray *self, uint8_t *buf, size_t buf_size);
 
 /**
  * Extends this dynamic array with a buffer starting at `begin` and ending at 
@@ -163,15 +162,16 @@ void *dynarray_pop(struct dynarray *self, struct type val_type);
  * Return the length of a dynamic array in terms of the number of elements of 
  * the inner type.
  */
-static inline size_t dynarray_capacity(struct dynarray const *self,
-                                       struct type val_type);
+static inline size_t dynarray_length(struct dynarray const *self, struct type val_type)
+{
+        return self->len / val_type.size;
+}
 
 /**
  * Return the capacity of a dynamic array in terms of the number of elements of 
  * the inner type.
  */
-static inline size_t dynarray_capacity(struct dynarray const *self,
-                                       struct type val_type)
+static inline size_t dynarray_capacity(struct dynarray const *self, struct type val_type)
 {
         return self->cap / val_type.size;
 }
@@ -192,8 +192,8 @@ void dynarray_free(struct dynarray *self);
 void *dynarray_get(struct dynarray *self, struct type val_type, size_t index);
 
 /**
- * Get a view into the entire allocated buffer as a `struct slice`. This buffer
+ * Get a view into the entire allocated buffer as a `slice`. This buffer
  * can be invalidated by any mutating function on `self`. So it's best to just
  * not do that. Please.
  */
-struct slice dynarray_as_slice(struct dynarray *self);
+slice dynarray_as_slice(struct dynarray *self);

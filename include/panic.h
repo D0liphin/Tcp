@@ -12,6 +12,6 @@ void todo(int line_nr, char const *filename);
 #define PANIC(...) panic(__LINE__, __FILE__, __VA_ARGS__)
 
 /**
- * Mark an unreachable path as 'TODO'
+ * Mark an unreachable path as 'TODO'.
  */
-#define TODO(...) todo(__LINE__, __FILE__)
+#define TODO() todo(__LINE__, __FILE__)

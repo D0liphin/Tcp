@@ -9,7 +9,7 @@
  * 
  * Slices do not need to be freed. They are non-owning.
  */
-struct slice {
+typedef struct {
         /**
          * Inclusive begin of the slice.
          */
@@ -18,32 +18,31 @@ struct slice {
 	 * Exclusive end of the slice.
 	 */
         void *end;
-};
+} slice;
 
 /**
  * Return an iterator to the beginning of this slice. The returned pointer is
  * valid for the inner type.
  */
-void *slice_begin(struct slice *self);
+void *slice_begin(slice self);
 
 /**
  * A pointer one past the end of this iterator.
  */
-void *slice_end(struct slice *self);
+void *slice_end(slice self);
 
 /**
  * Bounds-checked slice element access of the n-th element. The returned pointer
  * is valid for reads and writes of the inner type.
  */
-void *slice_get(struct slice *self, struct type val_type, size_t index);
+void *slice_get(slice self, struct type val_type, size_t index);
 
 /**
  * The length of this slice, in multiples of the inner type.
  */
-static inline size_t slice_length(struct slice const *self,
-                                  struct type val_type)
+static inline size_t slice_length(slice self, struct type val_type)
 {
-        return ((size_t)self->end - (size_t)self->begin) / val_type.size;
+        return ((size_t)self.end - (size_t)self.begin) / val_type.size;
 }
 
 /**
@@ -55,4 +54,4 @@ static inline size_t slice_length(struct slice const *self,
  * - All offsets from `begin` in this range must be valid for reads and writes 
  *   of the inner type.
  */
-struct slice slice_new(void *begin, void *end);
+slice slice_new(void *begin, void *end);

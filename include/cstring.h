@@ -10,8 +10,22 @@
  * an accident.
  */
 typedef struct {
+        /**
+         * You shouldn't be relying on this field existing. This type is 
+         * supposed to be opaque. Use `codepoint_as_uint32()`.
+         */
         uint32_t value;
 } codepoint;
+
+/**
+ * Intended for use as a character literal specifier. E.g. 
+ * 
+ * ```c
+ * CODEPOINT('A')
+ * CODEPOINT('あ')
+ * ```
+ */
+#define CODEPOINT(value) codepoint_new((uint32_t)value)
 
 /**
  * An allocated utf-8 string. This string also has the 'benefit' of always 
@@ -58,13 +72,13 @@ struct cstring {
  * A valid utf8 slice. Roughly the same as `*mut str`. See the rust docs for
  * more information.
  */
-struct str {
+typedef struct {
         /** 
          * Internal type `char` (or `unsigned char` etc.) This is not to be 
          * confused with `character`.
          */
-        struct slice sl;
-};
+        slice sl;
+} str;
 
 /**
  * An iterator over the codepoints in a `struct cstring`. The full iterator 
@@ -79,11 +93,31 @@ struct codepoints {
          * `begin` field as the iteration progresses. Slice has internal type
          * `codepoint`.
          */
-        struct slice iter;
+        slice iter;
 };
 
 /**
- * Construct a new, empty `cstring`. No allocation is performed
+ * Create a new codepoint from a character. This is intentended to be used only 
+ * for character literals that you know to be unicode beforehand.
+ */
+inline codepoint codepoint_new(uint32_t value)
+{
+        codepoint ch;
+        ch.value = value;
+        return ch;
+}
+
+/**
+ * Convert this codepoint int a `uint32_t` codepoint.
+ */
+inline uint32_t codepoint_as_uint32(codepoint ch)
+{
+        return ch.value;
+}
+
+/**
+ * Construct a new, empty `cstring`. This is not zero-allocating. An empty 
+ * string contains a single null-byte.
  */
 struct cstring cstring_new();
 
@@ -104,20 +138,21 @@ void cstring_free(struct cstring *self);
  * cstring_free(&greeting);
  * ```
  */
-struct cstring cstring_is(char *const cstr);
+struct cstring cstring_is(char const *cstr);
 
 /** 
  * Encode a `codepoint` as utf8 and append it.
  */
-void cstring_push(codepoint ch);
+void cstring_push(struct cstring *self, codepoint ch);
 
 /**
  * Extend by the bytes in a cstr. 
  * 
  * # Safety
- * Must be valid utf8.
+ * - Must be valid utf8. (deferred UB)
+ * - Must be null-terminated
  */
-void cstring_extend_cstr(char *const cstr);
+void cstring_extend_cstr(struct cstring *self, char *const cstr);
 
 /**
  * Extend by the bytes in a pointer iterator.
@@ -126,7 +161,7 @@ void cstring_extend_cstr(char *const cstr);
  * - Must be valid utf8.
  * - Must be a valid pointer iterator.
  */
-void cstring_extend(uint8_t *begin, uint8_t *end);
+void cstring_extend(struct cstring *self, uint8_t *begin, uint8_t *end);
 
 /**
  * Get the byte at the specified index. This returns an actual byte because 
@@ -143,10 +178,10 @@ uint8_t cstring_get(struct cstring const *self, size_t index);
 char const *cstring_as_cstr(struct cstring const *self);
 
 /**
- * Get a `struct str` representing this cstring. The returned `str` omits the 
+ * Get a `str` representing this cstring. The returned `str` omits the 
  * final null-byte.
  */
-struct str cstring_as_str(struct cstring const *self);
+str cstring_as_str(struct cstring const *self);
 
 /**
  * Get an iterator over the codepoints in this cstring.
@@ -154,36 +189,39 @@ struct str cstring_as_str(struct cstring const *self);
 struct codepoints cstring_codepoints(struct cstring const *self);
 
 /**
- * Return an iterator to the beginning of this slice. The returned pointer is
- * valid for the inner type.
+ * Return an iterator to the beginning of this str.
  */
-void *str_begin(struct str *self);
+uint8_t *str_begin(str self);
 
 /**
  * A pointer one past the end of this iterator.
  */
-void *str_end(struct str *self);
+uint8_t *str_end(str self);
 
 /**
  * Bounds-checked str element access of the n-th byte. 
  */
-uint8_t str_get(struct str *self, size_t index);
+uint8_t str_get(str self, size_t index);
 
 /**
  * The length of this str in bytes. If you want the count, see 
  * `struct codepoints`.
  */
-static inline size_t str_length(struct str const *self, struct type val_type);
+static inline size_t str_length(str const self)
+{
+        return (size_t)self.sl.end - (size_t)self.sl.begin;
+}
 
 /**
- * Construct a str with a beginning and an end. 
+ * Construct a str with a beginning and an end. Returns an empty slice if the
+ * provided buffer is not utf8.
  */
-struct str str_new(uint8_t *begin, uint8_t *end);
+str str_new(uint8_t *begin, uint8_t *end);
 
 /**
  * Get an iterator over the codepoints in a str.
  */
-struct codepoints str_codepoints(struct str const *self);
+struct codepoints str_codepoints(str const self);
 
 /**
  * Advance this iterator. Note that calls to this are undefined if 

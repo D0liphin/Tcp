@@ -14,6 +14,20 @@ Methods require const type information to be passed as a parameter. Since the
 API is designed with the expectation that this type information is passed as 
 a constant, codegen is only evaluated for that case. 
 
+## Style
+
+I typically conform to the kernel style guide, with a few exceptions that make
+my life easier.
+
+1. 8-spaces instead of 8-width tabs
+2. Aligned comments
+3. Max-width of 100 characters for code and inline comments
+4. Max-width of 80 characters otherwise
+
+I also have more relaxed rules about typedefs, namely function signatures can 
+be typedefs. There are also two special case 'bad' typedefs in `slice` and 
+`str`.
+
 ## Example
 
 The following example demonstrates some basic usage of a dynamic array
@@ -78,6 +92,6 @@ bool my_iter_has_next(struct my_iter const *self);
 ## TODO
 
 - Array comparison (and cstring comparison, slice comparison etc.) 
-- Extend checked functions for strings
+- Extend checked utf8 functions for strings
 - Hashmaps (after TCP)
 - Deque (after hashmaps)

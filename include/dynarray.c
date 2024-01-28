@@ -91,24 +91,22 @@ void dynarray_resize_to_fit(struct dynarray *restrict self, size_t additional)
         self->cap = newcap;
 }
 
-void *dynarray_next_unchecked(struct dynarray *restrict self,
-                              struct type val_type)
+void *dynarray_next_unchecked(struct dynarray *restrict self, struct type val_type)
 {
         void *next = dynarray_end(self);
         self->len += val_type.size;
         return next;
 }
 
-void dynarray_extend_unchecked(struct dynarray *restrict self,
-                               uint8_t *restrict buf, size_t buf_size)
+void dynarray_extend_unchecked(struct dynarray *restrict self, uint8_t *restrict buf,
+                               size_t buf_size)
 {
         void *end = dynarray_end(self);
         memcpy((void *)end, (void *)buf, buf_size);
         self->len += buf_size;
 }
 
-void dynarray_extend(struct dynarray *restrict self, void const *begin,
-                     void const *end)
+void dynarray_extend(struct dynarray *restrict self, void const *begin, void const *end)
 {
         size_t buf_size = end - begin;
         size_t remaining_capacity = self->cap - self->len;
@@ -149,11 +147,10 @@ void dynarray_free(struct dynarray *restrict self)
  */
 void *dynarray_get(struct dynarray *self, struct type val_type, size_t index)
 {
-        struct slice sl = dynarray_as_slice(self);
-        return slice_get(&sl, val_type, index);
+        return slice_get(dynarray_as_slice(self), val_type, index);
 }
 
-inline struct slice dynarray_as_slice(struct dynarray *self)
+slice dynarray_as_slice(struct dynarray *self)
 {
         return slice_new(dynarray_begin(self), dynarray_end(self));
 }
