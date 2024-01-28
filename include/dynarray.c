@@ -1,14 +1,7 @@
 #include "./dynarray.h"
 #include "./panic.h"
-
-struct type type_new(size_t size)
-{
-        struct type type;
-        type.size = size;
-        return type;
-}
-
-#define TYPEINFO(T) type_new(sizeof(T))
+#include "./type.h"
+#include "./slice.h"
 
 #define DYN_ARRAY_MIN_CAP 4
 
@@ -142,22 +135,11 @@ void *dynarray_pop(struct dynarray *restrict self, struct type val_type)
         return NULL;
 }
 
-inline size_t dynarray_length(struct dynarray const *self, struct type val_type)
-{
-        printf("self->len / val_type.size = %zu / %zu = %zu\n", self->len,
-               val_type.size, self->len / val_type.size);
-        return self->len / val_type.size;
-}
-
-inline size_t dynarray_capacity(struct dynarray const *self,
-                                struct type val_type)
-{
-        return self->cap / val_type.size;
-}
-
 void dynarray_free(struct dynarray *restrict self)
 {
-        free(self->data);
+        if (self->data != NULL) {
+                free(self->data);
+        }
 }
 
 /**
@@ -167,10 +149,11 @@ void dynarray_free(struct dynarray *restrict self)
  */
 void *dynarray_get(struct dynarray *self, struct type val_type, size_t index)
 {
-        if (index < dynarray_length(self, val_type)) {
-                return &((uint8_t *)self->data)[index * val_type.size];
-        }
-        PANIC("index out of bounds: the length is %zu but the index is %zu",
-              dynarray_length(self, val_type), index);
-        return NULL; // unreachable
+        struct slice sl = dynarray_as_slice(self);
+        return slice_get(&sl, val_type, index);
+}
+
+inline struct slice dynarray_as_slice(struct dynarray *self)
+{
+        return slice_new(dynarray_begin(self), dynarray_end(self));
 }

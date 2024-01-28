@@ -7,25 +7,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <limits.h>
-
-/**
- * Contains compile-time accessible type information. Construct with `TYPEINFO`
- * macro e.g.
- * 
- * ```c
- * TYPEINFO(int)
- * ```
- */
-struct type {
-        size_t size;
-};
-
-/**
- * Contruct a new `struct type` with a given `size`.
- */
-struct type type_new(size_t size);
-
-#define TYPEINFO(T) type_new(sizeof(T))
+#include "./type.h"
 
 /**
  * A dynamic, exponentially growing array. Each array has an associate type, for
@@ -181,15 +163,18 @@ void *dynarray_pop(struct dynarray *self, struct type val_type);
  * Return the length of a dynamic array in terms of the number of elements of 
  * the inner type.
  */
-inline size_t dynarray_length(struct dynarray const *self,
-                              struct type val_type);
+static inline size_t dynarray_capacity(struct dynarray const *self,
+                                       struct type val_type);
 
 /**
  * Return the capacity of a dynamic array in terms of the number of elements of 
  * the inner type.
  */
-inline size_t dynarray_capacity(struct dynarray const *self,
-                                struct type val_type);
+static inline size_t dynarray_capacity(struct dynarray const *self,
+                                       struct type val_type)
+{
+        return self->cap / val_type.size;
+}
 
 /**
  * Free this dynamic array, invalidating it for any future use.
@@ -205,3 +190,10 @@ void dynarray_free(struct dynarray *self);
  * `val_type` must be the inner type.
  */
 void *dynarray_get(struct dynarray *self, struct type val_type, size_t index);
+
+/**
+ * Get a view into the entire allocated buffer as a `struct slice`. This buffer
+ * can be invalidated by any mutating function on `self`. So it's best to just
+ * not do that. Please.
+ */
+struct slice dynarray_as_slice(struct dynarray *self);
