@@ -42,3 +42,42 @@ This outputs
 1 2 4 4 5 6 7 8 9 10 
 10 9 8 7 6 5 4 4 2 1 
 ```
+
+## Iterators
+
+It's difficult to create a unified idea of an iterator here. But typically we
+should adhere to the following structure for non-pointer iterators.
+
+```c
+// houses iterable items of type `my_t`
+struct my_iterable { /* some fields */ }
+
+// iterates over values of type `my_t`
+struct my_iter { /* some fields */ }
+
+struct my_iter my_iterable_iter();
+
+my_t my_iter_next(struct my_iter *restrict self);
+
+/**
+ * Some kind of invalid value for us to compare the iterator against. 
+ * Pros: Easy and C++ style
+ * Cons: We can't override == so this has to be bitwise and could take a while
+ */
+struct my_iter my_iterable_end();
+
+/**
+ * A function that checks if the iterator is exhausted.
+ * Pros: Always fast
+ * Cons: Requires implementor to know if there is another value before-hand. 
+ * This could involve computing the next value.
+ */
+bool my_iter_has_next(struct my_iter const *self);
+```
+
+## TODO
+
+- Array comparison (and cstring comparison, slice comparison etc.) 
+- Extend checked functions for strings
+- Hashmaps (after TCP)
+- Deque (after hashmaps)
