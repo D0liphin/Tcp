@@ -118,35 +118,21 @@ uint8_t str_get(str self, size_t index)
         return *(uint8_t *)slice_get(self.sl, TYPEINFO(uint8_t), index);
 }
 
-/**
- * Construct a str with a beginning and an end. Returns an empty slice if the
- * provided buffer is not utf8.
- */
 str str_new(uint8_t *begin, uint8_t *end)
 {
         TODO();
 }
 
-/**
- * Get an iterator over the codepoints in a str.
- */
 struct codepoints str_codepoints(str const self)
 {
         TODO();
 }
 
-/**
- * Advance this iterator. Note that calls to this are undefined if 
- * `codepoints_has_next(self)` returns `false`.
- */
 codepoint codepoints_next(struct codepoints *self)
 {
         TODO();
 }
 
-/**
- * Check if a call to `codepoints_next` is valid.
- */
 bool codepoints_has_next(struct codepoints *self)
 {
         TODO();
