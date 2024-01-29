@@ -14,12 +14,12 @@ struct dynarray dynarray_new()
         return arr;
 }
 
-void *dynarray_begin(struct dynarray *self)
+void *dynarray_begin(struct dynarray const *self)
 {
         return self->data;
 }
 
-void *dynarray_end(struct dynarray *self)
+void *dynarray_end(struct dynarray const *self)
 {
         return &((uint8_t *)self->data)[self->len];
 }
@@ -153,4 +153,17 @@ void *dynarray_get(struct dynarray *self, struct type val_type, size_t index)
 slice dynarray_as_slice(struct dynarray *self)
 {
         return slice_new(dynarray_begin(self), dynarray_end(self));
+}
+
+int dynarray_memcmp(struct dynarray const *lhs, struct dynarray const *rhs)
+{
+        // explicit cast is okay here, because the slice is not actually
+        // mutated.
+        return slice_memcmp(dynarray_as_slice((struct dynarray *)lhs),
+                            dynarray_as_slice((struct dynarray *)rhs));
+}
+
+bool dynarray_memeq(struct dynarray const *lhs, struct dynarray const *rhs)
+{
+        return (bool)(dynarray_memcmp(lhs, rhs) == 0);
 }

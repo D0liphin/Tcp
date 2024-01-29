@@ -5,10 +5,7 @@
 
 struct cstring cstring_new()
 {
-        struct cstring s;
-        s.buf = dynarray_new();
-        *(uint8_t *)dynarray_next(&s.buf, TYPEINFO(uint8_t)) = 0x00;
-        return s;
+        return cstring_is("");
 }
 
 void cstring_free(struct cstring *restrict self)
@@ -20,7 +17,7 @@ struct cstring cstring_is(char const *cstr)
 {
         struct cstring s;
         s.buf = dynarray_new();
-        cstring_extend_cstr(&s.buf, cstr);
+        cstring_extend_cstr(&s, cstr);
         return s;
 }
 
@@ -62,22 +59,32 @@ void cstring_push(struct cstring *restrict self, codepoint ch)
 {
         uint8_t out[4];
         size_t encoding_length = encode_utf8(out, ch);
-        dynarray_pop(self, TYPEINFO(uint8_t));
+        dynarray_pop(&self->buf, TYPEINFO(uint8_t));
         for (size_t i = 0; i < encoding_length; ++i) {
                 *(uint8_t *)dynarray_next(&self->buf, TYPEINFO(uint8_t)) = out[i];
         }
         *(uint8_t *)dynarray_next(&self->buf, TYPEINFO(uint8_t)) = 0x00;
 }
 
-void cstring_extend_cstr(struct cstring *restrict self, char *const cstr)
+void cstring_extend_cstr(struct cstring *restrict self, char const *cstr)
 {
-        char *end = cstr + strlen(cstr) + 1;
-        cstring_extend(self, cstr, end);
+        char const *end = cstr + strlen(cstr);
+        cstring_extend(self, (uint8_t const *)cstr, (uint8_t const *)end);
 }
 
-void cstring_extend(struct cstring *restrict self, uint8_t *begin, uint8_t *end)
+bool cstring_eq(struct cstring const *lhs, struct cstring const *rhs)
 {
-        dynarray_pop(self, TYPEINFO(uint8_t));
+        return dynarray_memeq(&lhs->buf, &rhs->buf);
+}
+
+bool cstr_eq(char const *lhs, char const *rhs)
+{
+        return strcmp(lhs, rhs) == 0;
+}
+
+void cstring_extend(struct cstring *restrict self, uint8_t const *begin, uint8_t const *end)
+{
+        dynarray_pop(&self->buf, TYPEINFO(uint8_t));
         dynarray_extend(&self->buf, (void *)begin, (void *)end);
         *(uint8_t *)dynarray_next(&self->buf, TYPEINFO(uint8_t)) = 0x00;
 }
@@ -94,7 +101,6 @@ char const *cstring_as_cstr(struct cstring const *self)
 
 str cstring_as_str(struct cstring const *self)
 {
-        // ignores null-terminator
         return str_new(dynarray_begin(&self->buf), dynarray_end(&self->buf) - 1);
 }
 

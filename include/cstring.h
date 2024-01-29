@@ -152,7 +152,7 @@ void cstring_push(struct cstring *self, codepoint ch);
  * - Must be valid utf8. (deferred UB)
  * - Must be null-terminated
  */
-void cstring_extend_cstr(struct cstring *self, char *const cstr);
+void cstring_extend_cstr(struct cstring *self, char const *cstr);
 
 /**
  * Extend by the bytes in a pointer iterator.
@@ -161,7 +161,7 @@ void cstring_extend_cstr(struct cstring *self, char *const cstr);
  * - Must be valid utf8.
  * - Must be a valid pointer iterator.
  */
-void cstring_extend(struct cstring *self, uint8_t *begin, uint8_t *end);
+void cstring_extend(struct cstring *self, uint8_t const *begin, uint8_t const *end);
 
 /**
  * Get the byte at the specified index. This returns an actual byte because 
@@ -176,6 +176,16 @@ uint8_t cstring_get(struct cstring const *self, size_t index);
  * functions that expect a cstr.
  */
 char const *cstring_as_cstr(struct cstring const *self);
+
+/**
+ * Compare two strings for value equality.
+ */
+bool cstring_eq(struct cstring const *lhs, struct cstring const *rhs);
+
+/**
+ * Compare to cstrs for value equality.
+ */
+bool cstr_eq(char const *lhs, char const *rhs);
 
 /**
  * Get a `str` representing this cstring. The returned `str` omits the 

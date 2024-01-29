@@ -7,6 +7,8 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include "./type.h"
 #include "./slice.h"
@@ -70,7 +72,7 @@ struct dynarray dynarray_new();
  * to a pointer to the inner type. And the resulting pointer is valid for reads
  * and writes of the inner type.
  */
-void *dynarray_begin(struct dynarray *self);
+void *dynarray_begin(struct dynarray const *self);
 
 /**
  * Acquire a pointer to the end of this array. This pointer is valid for casts
@@ -80,7 +82,7 @@ void *dynarray_begin(struct dynarray *self);
  * If you wish to modify the next unoccupied cell in this array, you can use
  * `dynarray_next()` for a safer version.
  */
-void *dynarray_end(struct dynarray *self);
+void *dynarray_end(struct dynarray const *self);
 
 /**
  * Exponentially resize this dynamic array. This only produces unrecoverable
@@ -197,3 +199,24 @@ void *dynarray_get(struct dynarray *self, struct type val_type, size_t index);
  * not do that. Please.
  */
 slice dynarray_as_slice(struct dynarray *self);
+
+/**
+ * Do a `memcmp()` over the contents of this buffer. This will work as you 
+ * expect for all primitive types e.g. `int`, `long` etc. However, for types 
+ * that have padding, e.g. 
+ * ```c
+ * struct Foo { int a; char b; };
+ * ``` 
+ * you will need to make sure that the padding is zeroed (or set to some common
+ * value). Otherwise two arrays with the same initialization pattern might 
+ * not be considered equal.
+ * 
+ * For reference, the value returned has the same 
+ */
+int dynarray_memcmp(struct dynarray const *lhs, struct dynarray const *rhs);
+
+/**
+ * Shorthand for doing a `memcmp` on these arrays and testing the result against
+ * `0`. See `dynarray_memcmp` for more information.
+ */
+bool dynarray_memeq(struct dynarray const *lhs, struct dynarray const *rhs);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string.h>
 #include <stdint.h>
 #include <stddef.h>
 
@@ -55,3 +56,24 @@ static inline size_t slice_length(slice self, struct type val_type)
  *   of the inner type.
  */
 slice slice_new(void *begin, void *end);
+
+/**
+ * Do a `memcmp()` over the contents of this buffer. This will work as you 
+ * expect for all primitive types e.g. `int`, `long` etc. However, for types 
+ * that have padding, e.g. 
+ * ```c
+ * struct Foo { int a; char b; };
+ * ``` 
+ * you will need to make sure that the padding is zeroed (or set to some common
+ * value). Otherwise two arrays with the same initialization pattern might 
+ * not be considered equal.
+ * 
+ * For reference, the value returned has the same 
+ */
+int slice_memcmp(slice lhs, slice rhs);
+
+/**
+ * Shorthand for doing a `memcmp` on these slices and testing the result against
+ * `0`. See `slice_memcmp` for more information.
+ */
+bool slice_memeq(slice lhs, slice rhs);
