@@ -18,6 +18,7 @@ static void cstring_pushes()
         cstring_push(&string, CODEPOINT(L'界'));
         cstring_push(&string, CODEPOINT(L'!'));
         ASSERT(cstr_eq(cstring_as_cstr(&string), "Hello, 世界!"));
+        cstring_free(&string);
 }
 
 int main()
