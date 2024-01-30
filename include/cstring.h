@@ -1,6 +1,7 @@
+#pragma once
+
 #include <stdint.h>
 #include <stdbool.h>
-
 #include "./dynarray.h"
 #include "./slice.h"
 
@@ -21,8 +22,8 @@ typedef struct {
  * Intended for use as a character literal specifier. E.g. 
  * 
  * ```c
- * CODEPOINT('A')
- * CODEPOINT('あ')
+ * CODEPOINT(L'A')
+ * CODEPOINT(L'あ')
  * ```
  */
 #define CODEPOINT(value) codepoint_new((uint32_t)value)

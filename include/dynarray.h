@@ -95,6 +95,9 @@ void dynarray_resize(struct dynarray *self, struct type val_type);
 
 /**
  * Resize this dynamic array to fit at least `additional` more bytes.
+ * 
+ * # Safety
+ * - `additional` must be at least the size of the inner type. 
  */
 void dynarray_resize_to_fit(struct dynarray *self, size_t additional);
 
@@ -220,3 +223,56 @@ int dynarray_memcmp(struct dynarray const *lhs, struct dynarray const *rhs);
  * `0`. See `dynarray_memcmp` for more information.
  */
 bool dynarray_memeq(struct dynarray const *lhs, struct dynarray const *rhs);
+
+/**
+ * Evil macro that I still want to make because it makes everything a lot 
+ * easier. The expansion is quite self explanatory. For example, the following
+ * two lines are equivalent:
+ * 
+ * ```c                 
+ * dynarray_push(&arr, int, val);
+ * *(int *)dynarray_next(&arr, TYPEINFO(int)) = val;
+ * ```
+ * 
+ * There is essentially no case where we don't want to use `dynarray_next()` in 
+ * this way, so I don't think defining a macro here is *so* evil. The user is
+ * also asserting that the inner type is `int` by writing `int`... though 
+ * perhaps that is not explicit enough. If you think so, feel free to use the 
+ * non-macro version.
+ */
+#define DYNARRAY_PUSH(self, T, val) *(T *)dynarray_next(self, TYPEINFO(T)) = val
+
+/**
+ * Evil macro for shorthand dynarray popping. Expansion is hopefully readably
+ * clear. See `DYNARRAY_PUSH()` for more info.
+ */
+#define DYNARRAY_POP(self, T) *(T *)dynarray_pop(self, TYPEINFO(T))
+
+/**
+ * Evil macro for shorthand dynarray_length. Expansion is hopefully readably
+ * clear. See `DYNARRAY_PUSH()` for more info.
+ */
+#define DYNARRAY_LENGTH(self, T) dynarray_length(self, TYPEINFO(T))
+
+/**
+ * Evil macro for shorthand dynarray_capacity. Expansion is hopefully readably
+ * clear. See `DYNARRAY_PUSH()` for more info.
+ */
+#define DYNARRAY_CAPACITY(self, T) dynarray_length(self, TYPEINFO(T))
+
+/**
+ * A **very** evil macro for shorthand dynarray initialisation with an array. 
+ * Specify the inner type and then the values that should go in this dynarray.
+ * 
+ * # Example
+ * ```c
+ * struct dynarray arr = DYNARRAY_IS(int, 1, 2, 3);
+ * ```
+ */
+#define DYNARRAY_IS(T, ...)                                                             \
+        ({                                                                              \
+                T __arr[] = { __VA_ARGS__ };                                            \
+                struct dynarray __this = dynarray_new();                                \
+                dynarray_extend(&__this, &__arr[0], &__arr[sizeof(__arr) / sizeof(T)]); \
+                __this;                                                                 \
+        })
